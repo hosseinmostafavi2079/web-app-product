@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mb-5">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0 fw-bold text-primary">افزودن محصول هوشمند</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info border-info mb-4">
+                    <h6 class="alert-heading fw-bold">نحوه کارکرد سیستم:</h6>
+                    <p class="mb-0 small">پس از ثبت اطلاعات اولیه، هوش مصنوعی عنوان سئو شده، توضیحات کوتاه و توضیحات بلند (شامل هدرهای داینامیک، جدول مشخصات و سوالات متداول) را تولید کرده و محصول به صورت خودکار در سایت ووکامرس شما (<strong>{{ store.name }}</strong>) منتشر می‌شود. <em>(این فرآیند ممکن است ۳۰ تا ۶۰ ثانیه زمان ببرد)</em></p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" id="addProductForm">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <hr class="my-4">
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <span id="btnText">شروع تولید محتوا و انتشار در ووکامرس</span>
+                            <span id="btnLoader" class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // اسکریپت کنترل دکمه سابمیت برای جلوگیری از کلیک مجدد و نمایش وضعیت لودینگ
+    document.getElementById('addProductForm').addEventListener('submit', function() {
+        var btn = document.getElementById('submitBtn');
+        var text = document.getElementById('btnText');
+        var loader = document.getElementById('btnLoader');
+        
+        // غیرفعال کردن فرم
+        btn.classList.add('disabled');
+        btn.style.cursor = 'not-allowed';
+        
+        // تغییر متن و نمایش اسپینر
+        text.innerText = 'در حال پردازش با هوش مصنوعی و ارتباط با ووکامرس... لطفا صبر کنید ';
+        loader.classList.remove('d-none');
+    });
+</script>
+{% endblock %}

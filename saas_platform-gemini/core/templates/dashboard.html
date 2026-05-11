@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="mb-3 text-secondary">داشبورد فروشگاه: <span class="text-dark">{{ store.name }}</span></h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title mb-3">سهمیه باقی‌مانده این ماه</h5>
+                <h1 class="display-3 fw-bold">{{ remaining_quota }}</h1>
+                <p class="card-text mt-2">از مجموع {{ store.plan.max_products_per_month }} محصول در پلن اشتراکی «{{ store.plan.name }}»</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+                <h5 class="card-title">وضعیت اتصال سیستم</h5>
+                <h2 class="mt-3">فعال و یکپارچه</h2>
+                <small class="mt-2 text-white-50">متصل به هوش مصنوعی و ووکامرس</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold">گزارش آخرین فعالیت‌ها (Product Logs)</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4">نام محصول</th>
+                        <th>آیدی ووکامرس</th>
+                        <th>کاربر ایجاد کننده</th>
+                        <th>وضعیت</th>
+                        <th>تاریخ و زمان (سیستم)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td class="px-4 fw-medium">{{ log.product_name }}</td>
+                        <td>{{ log.woo_product_id|default:"-" }}</td>
+                        <td>{{ log.user.username }}</td>
+                        <td>
+                            {% if log.status == 'success' %}
+                                <span class="badge bg-success px-3 py-2">موفق</span>
+                            {% else %}
+                                <span class="badge bg-danger px-3 py-2" title="خطا: {{ log.error_message }}">ناموفق</span>
+                            {% endif %}
+                        </td>
+                        <td dir="ltr" class="text-end pe-4 text-muted">{{ log.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-5">هیچ لاگ یا فعالیتی برای این فروشگاه ثبت نشده است.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
