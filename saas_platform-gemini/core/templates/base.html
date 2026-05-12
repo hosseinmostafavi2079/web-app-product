@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پلتفرم مدیریت یکپارچه</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css">
+  <style>
+    /* تنظیمات حالت روشن (پیش‌فرض) */
+    :root, [data-theme="light"] {
+      --bg:      #f4f6f8;
+      --bg2:     #ffffff;
+      --bg3:     #eef0f3;
+      --bg4:     #e4e7eb;
+      --border:  #dde1e6;
+      --border2: #c5cbd3;
+      --text:    #1a1d24;
+      --text2:   #4a5468;
+      --text3:   #717b8e;
+      --accent:  #4f8ef7;
+      --accent2: #3a6fd4;
+      --gold:    #e8b84b;
+      --gold2:   #c99b35;
+      --success: #3ec97e;
+      --danger:  #e85c5c;
+      --warn:    #e8a23e;
+      --info:    #4fb8f7;
+      --r:       10px;
+      --r2:      6px;
+    }
+
+    /* تنظیمات حالت تاریک */
+    [data-theme="dark"] {
+      --bg:      #0f1117;
+      --bg2:     #161923;
+      --bg3:     #1e2330;
+      --bg4:     #252c3a;
+      --border:  #2a3245;
+      --border2: #354060;
+      --text:    #e8ecf4;
+      --text2:   #8b95ab;
+      --text3:   #5a6478;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; transition: background-color 0.3s ease; }
+
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .navbar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-brand {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.2px;
+    }
+    .nav-brand-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+    .nav-link {
+      font-size: 13px;
+      color: var(--text2);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: var(--r2);
+      transition: all .15s;
+      white-space: nowrap;
+      font-family: 'Vazirmatn', sans-serif;
+    }
+    .nav-link:hover { color: var(--text); background: var(--bg3); }
+    .nav-link.active { color: var(--accent); background: rgba(79,142,247,.1); }
+    .navbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-user {
+      font-size: 12px;
+      color: var(--text3);
+      padding: 5px 10px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      white-space: nowrap;
+    }
+    .nav-user span { color: var(--text2); }
+
+    /* دکمه تغییر تم */
+    .theme-toggle-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    .theme-toggle-btn:hover { background: var(--bg3); color: var(--text); }
+
+    /* mobile hamburger */
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      color: var(--text2);
+      padding: 5px 9px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    @media (max-width: 680px) {
+      .nav-toggle { display: block; }
+      .navbar { flex-wrap: wrap; height: auto; padding: 10px 16px; gap: 10px; }
+      .navbar-right { width: 100%; justify-content: space-between; }
+      .nav-menu {
+        display: none;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        padding-bottom: 8px;
+        gap: 2px;
+      }
+      .nav-menu.open { display: flex; }
+      .nav-link { width: 100%; padding: 8px 10px; }
+      .navbar-left { justify-content: space-between; width: 100%; margin-top: 5px; }
+    }
+
+    /* ── Page wrapper ── */
+    .page-wrapper {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── Alert messages ── */
+    .messages-wrap { margin-bottom: 16px; }
+    .msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--r2);
+      font-size: 13px;
+      margin-bottom: 8px;
+      border: 1px solid;
+      position: relative;
+    }
+    .msg-success { background: rgba(62,201,126,.08); border-color: rgba(62,201,126,.25); color: var(--success); }
+    .msg-error,
+    .msg-danger   { background: rgba(232,92,92,.08);  border-color: rgba(232,92,92,.25);  color: var(--danger); }
+    .msg-warning  { background: rgba(232,162,62,.08); border-color: rgba(232,162,62,.25); color: var(--warn); }
+    .msg-info     { background: rgba(79,184,247,.08); border-color: rgba(79,184,247,.25); color: var(--info); }
+    .msg-close {
+      background: none;
+      border: none;
+      color: currentColor;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      opacity: .6;
+      margin-right: auto;
+      padding: 0 2px;
+    }
+    .msg-close:hover { opacity: 1; }
+
+    /* ── Shared card component ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      margin-bottom: 14px;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .card-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .card-body { padding: 16px; }
+    .card-footer {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+
+    /* ── Shared form elements ── */
+    label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 5px; font-family: 'Vazirmatn', sans-serif;}
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="url"],
+    input[type="file"],
+    textarea,
+    select {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--r2);
+      padding: 9px 12px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: all .15s;
+      appearance: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    input[type="file"] { padding: 7px 12px; cursor: pointer; }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    select option { background: var(--bg3); font-family: 'Vazirmatn', sans-serif; color: var(--text); }
+    .form-text { font-size: 11px; color: var(--text3); margin-top: 4px; }
+    .field-error { font-size: 12px; color: var(--danger); margin-top: 4px; }
+    .mb3 { margin-bottom: 12px; }
+
+    /* ── Shared buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--r2);
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all .15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary  { background: var(--accent);  color: #fff; }
+    .btn-primary:hover  { background: var(--accent2); }
+    .btn-gold     { background: var(--gold);    color: #1a1d24; }
+    .btn-gold:hover     { background: var(--gold2); }
+    .btn-ghost    { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+    .btn-ghost:hover    { border-color: var(--accent); color: var(--accent); }
+    .btn-success  { background: rgba(62,201,126,.12); color: var(--success); border: 1px solid rgba(62,201,126,.2); }
+    .btn-success:hover  { background: rgba(62,201,126,.22); }
+    .btn-danger   { background: rgba(232,92,92,.12);  color: var(--danger);  border: 1px solid rgba(232,92,92,.2); }
+    .btn-danger:hover   { background: rgba(232,92,92,.22); }
+    .btn-lg { padding: 12px 24px; font-size: 14px; }
+    .btn-sm { padding: 5px 11px;  font-size: 12px; }
+    .btn-block { width: 100%; }
+    .btn-disabled { opacity: .6; cursor: not-allowed !important; pointer-events: none; }
+
+    /* ── Shared tags / badges ── */
+    .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: 500; font-family: 'Vazirmatn', sans-serif;}
+    .tag-blue   { background: rgba(79,142,247,.12); color: var(--accent);  border: 1px solid rgba(79,142,247,.2); }
+    .tag-gold   { background: rgba(232,184,75,.12); color: var(--gold); }
+    .tag-green  { background: rgba(62,201,126,.12); color: var(--success); }
+    .tag-red    { background: rgba(232,92,92,.12);  color: var(--danger); }
+    .tag-warn   { background: rgba(232,162,62,.12); color: var(--warn); }
+
+    /* ── Shared grid ── */
+    .row  { display: grid; gap: 12px; }
+    .r2   { grid-template-columns: 1fr 1fr; }
+    .r3   { grid-template-columns: 1fr 1fr 1fr; }
+    .r4   { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 640px) {
+      .r2, .r3, .r4 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Shared table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 540px; }
+    thead tr { background: var(--bg4); border-bottom: 1px solid var(--border2); }
+    thead th { padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text2); text-align: right; white-space: nowrap; letter-spacing: .3px; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+    tbody tr:hover { background: var(--bg3); }
+    tbody td { padding: 10px 14px; font-size: 13px; vertical-align: middle; }
+    tbody tr:last-child { border-bottom: none; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: none;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      flex-shrink: 0;
+    }
+    .spinner-dark {
+      border-color: rgba(15,17,23,.25);
+      border-top-color: #0f1117;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+    /* ── Pagination ── */
+    .pagination { display: flex; align-items: center; gap: 4px; justify-content: center; }
+    .page-btn {
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--text2); border-radius: var(--r2);
+      padding: 5px 11px; font-size: 12px; font-family: 'Vazirmatn', sans-serif;
+      cursor: pointer; min-width: 34px; text-align: center;
+      text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+      transition: all .12s;
+    }
+    .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 52px 20px; color: var(--text3); font-size: 13px; }
+
+    /* ── Section title ── */
+    .section-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .6px; text-transform: uppercase; margin-bottom: 10px; }
+    .page-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; color: var(--text); }
+    .page-subtitle { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+    /* ── Status dot ── */
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .75; flex-shrink: 0; display: inline-block; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="navbar-right">
+      <a href="{% url 'dashboard' %}" class="nav-brand">
+        <span class="nav-brand-dot"></span>
+        Core Platform
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="منو">&#9776;</button>
+    </div>
+
+    <div class="nav-menu" id="navMenu">
+      <a class="nav-link" href="{% url 'dashboard' %}">داشبورد</a>
+      <a class="nav-link" href="{% url 'product_manager' %}">مدیریت محصولات</a>
+      <a class="nav-link" href="{% url 'add_product' %}">افزودن هوشمند</a>
+    </div>
+
+    <div class="navbar-left">
+      <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="تغییر تم">
+        <span id="icon-sun" style="display:none;">☀️</span>
+        <span id="icon-moon" style="display:none;">🌙</span>
+      </button>
+      <span class="nav-user">{{ user.username }} <span>|</span> {{ store.name }}</span>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+
+    {% if messages %}
+    <div class="messages-wrap">
+      {% for message in messages %}
+      <div class="msg msg-{{ message.tags }}">
+        {{ message }}
+        <button class="msg-close" onclick="this.parentElement.remove()" aria-label="بستن">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+  </div>
+
+  <script>
+    // تنظیمات منوی موبایل
+    var toggle = document.getElementById('navToggle');
+    var menu   = document.getElementById('navMenu');
+    if (toggle) toggle.addEventListener('click', function () {
+      menu.classList.toggle('open');
+    });
+
+    // تنظیم کلاس active برای لینک فعلی
+    var links = document.querySelectorAll('.nav-link');
+    links.forEach(function (link) {
+      if (link.href === window.location.href) link.classList.add('active');
+    });
+
+    // سیستم مدیریت حالت تاریک و روشن (Dark / Light Mode)
+    const rootElem = document.documentElement;
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const iconSun = document.getElementById('icon-sun');
+    const iconMoon = document.getElementById('icon-moon');
+
+    // بررسی تم ذخیره شده یا تم سیستم
+    const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    
+    function applyTheme(theme) {
+      rootElem.setAttribute('data-theme', theme);
+      if (theme === 'dark') {
+        iconSun.style.display = 'block';
+        iconMoon.style.display = 'none';
+      } else {
+        iconSun.style.display = 'none';
+        iconMoon.style.display = 'block';
+      }
+    }
+
+    // اعمال تم اولیه
+    applyTheme(savedTheme);
+
+    // تغییر تم با کلیک
+    if(themeBtn) {
+      themeBtn.addEventListener('click', function() {
+        const currentTheme = rootElem.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+      });
+    }
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
