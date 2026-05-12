@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div style="margin-bottom:28px">
+  <p class="page-title">داشبورد</p>
+  <p class="page-subtitle">خلاصه وضعیت سیستم — {{ store.name }}</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row r2" style="margin-bottom:16px">
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-body" style="padding:22px 20px">
+      <div class="section-label" style="margin-bottom:14px">سهمیه باقی‌مانده این ماه</div>
+      <div style="display:flex;align-items:flex-end;gap:10px;margin-bottom:10px">
+        <span class="stat-number" style="color:var(--accent)">{{ remaining_quota }}</span>
+        <span style="font-size:13px;color:var(--text3);padding-bottom:6px">محصول</span>
+      </div>
+      <div style="height:4px;background:var(--bg4);border-radius:4px;overflow:hidden">
+        {% with used=store.plan.max_products_per_month|add:"-"|add:remaining_quota %}
+        <div style="height:100%;background:var(--accent);border-radius:4px;width:{% widthratio remaining_quota store.plan.max_products_per_month 100 %}%;transition:width .6s ease"></div>
+        {% endwith %}
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-top:8px">
+        از {{ store.plan.max_products_per_month }} محصول در پلن
+        <span style="color:var(--text2);font-weight:500">{{ store.plan.name }}</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:0">
+    <div class="card-body" style="padding:22px 20px">
+      <div class="section-label" style="margin-bottom:14px">وضعیت سیستم</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block;box-shadow:0 0 0 3px var(--success-bg);animation:pulse 2s ease infinite"></span>
+        <span style="font-size:18px;font-weight:600;color:var(--success);letter-spacing:-.3px">فعال و یکپارچه</span>
+      </div>
+      <p style="font-size:12px;color:var(--text3)">متصل به هوش مصنوعی و ووکامرس</p>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <span class="tag tag-green">هوش مصنوعی</span>
+        <span class="tag tag-blue">ووکامرس API</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Logs table -->
+<div class="card">
+  <div class="card-header">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text3)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    گزارش آخرین فعالیت‌ها
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>نام محصول</th>
+          <th>آیدی ووکامرس</th>
+          <th>کاربر</th>
+          <th>وضعیت</th>
+          <th>تاریخ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <td style="font-weight:500;color:var(--text)">{{ log.product_name }}</td>
+          <td dir="ltr" style="color:var(--text3);font-size:12px;font-variant-numeric:tabular-nums">{{ log.woo_product_id|default:"—" }}</td>
+          <td>
+            <span style="display:inline-flex;align-items:center;gap:6px">
+              <span style="width:20px;height:20px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent-border);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--accent)">{{ log.user.username|slice:":1"|upper }}</span>
+              {{ log.user.username }}
+            </span>
+          </td>
+          <td>
+            {% if log.status == 'success' %}
+              <span class="tag tag-green">
+                <span class="dot"></span>موفق
+              </span>
+            {% else %}
+              <span class="tag tag-red" title="خطا: {{ log.error_message }}">
+                <span class="dot"></span>ناموفق
+              </span>
+            {% endif %}
+          </td>
+          <td dir="ltr" style="color:var(--text3);font-size:12px;font-variant-numeric:tabular-nums">{{ log.created_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              هیچ فعالیتی برای این فروشگاه ثبت نشده است.
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--success-bg); }
+  50%       { box-shadow: 0 0 0 5px transparent; }
+}
+</style>
+
+{% endblock %}
