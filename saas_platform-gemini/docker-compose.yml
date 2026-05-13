@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: saas_db
+      POSTGRES_USER: saas_user
+      POSTGRES_PASSWORD: saas_password
+    ports:
+      - "127.0.0.1:54320:5432"
+    volumes:
+      - saas_data:/var/lib/postgresql/data
+ 
+  web:
+    build: .
+    restart: always
+    # در اینجا دستور collectstatic اضافه شد تا اول پوشه را بسازد و بعد سرور روشن شود
+    command: sh -c "python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+    depends_on:
+      - db
+volumes:
+  saas_data:

@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+.panel-wrap { max-width: 960px; margin: 0 auto; }
+
+.price-inp {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: var(--r3);
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Vazirmatn', sans-serif;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.price-inp:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+.price-inp.sale-inp { border-color: var(--danger-border); }
+.price-inp.sale-inp:focus { border-color: var(--danger); box-shadow: 0 0 0 2px var(--danger-bg); }
+
+.product-img {
+  width: 38px; height: 38px;
+  border-radius: 7px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  display: block;
+}
+.product-img-ph {
+  width: 38px; height: 38px;
+  border-radius: 7px;
+  background: var(--bg4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  color: var(--text4);
+  font-size: 8px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.product-name { font-weight: 500; color: var(--text); font-size: 13px; }
+.product-sku  { font-size: 11px; color: var(--text3); direction: ltr; display: block; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.badge-instock     { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.badge-outofstock  { background: var(--danger-bg);  color: var(--danger);  border-color: var(--danger-border); }
+.badge-onbackorder { background: var(--warn-bg);    color: var(--warn);    border-color: var(--warn-border); }
+
+/* select in table */
+.stock-select {
+  margin-top: 5px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--r3);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Vazirmatn', sans-serif;
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.stock-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+</style>
+
+<div class="panel-wrap">
+
+  <!-- Page header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <p class="page-title">مدیریت محصولات</p>
+      <p class="page-subtitle">ووکامرس — یکپارچه</p>
+    </div>
+    <span class="tag tag-green">
+      <span class="dot"></span>همگام‌سازی فعال
+    </span>
+  </div>
+
+  <!-- Bulk update -->
+  <div class="card">
+    <div class="card-header">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span class="tag tag-gold">تغییر قیمت گروهی</span>
+    </div>
+    <div class="card-body">
+      <form method="post" id="bulkUpdateForm">
+        {% csrf_token %}
+        <input type="hidden" name="bulk_update" value="1">
+
+        <div class="row r2" style="margin-bottom:12px">
+          <div>
+            <label for="bulk_category">دسته‌بندی هدف</label>
+            <select name="bulk_category" id="bulk_category" required>
+              <option value="">— انتخاب دسته —</option>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="bulk_action">نوع تغییر</label>
+            <select name="action" id="bulk_action" required>
+              <option value="increase">افزایش قیمت (+)</option>
+              <option value="decrease">کاهش قیمت (−)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row r2">
+          <div>
+            <label for="bulk_percent">درصد تغییر</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" name="percent" id="bulk_percent"
+                     min="1" max="100" placeholder="مثلاً ۲۰" required>
+              <span style="color:var(--text3);font-size:15px;flex-shrink:0;font-weight:300">%</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button type="submit" class="btn btn-gold btn-block" id="bulkSubmitBtn">
+              <span id="bulkSpinner" class="spinner spinner-dark"></span>
+              <span id="bulkText">اعمال تغییرات</span>
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Search / filter -->
+  <div class="card">
+    <div class="card-body">
+      <form method="get">
+        <div class="row r2" style="margin-bottom:12px">
+          <div>
+            <label>جستجو در نام محصول</label>
+            <input type="text" name="search" placeholder="نام محصول..." value="{{ search_q }}">
+          </div>
+          <div>
+            <label>کد SKU</label>
+            <input type="text" name="sku" placeholder="SKU محصول..." value="{{ sku_q }}">
+          </div>
+        </div>
+        <div class="row r3">
+          <div>
+            <label>دسته‌بندی</label>
+            <select name="category">
+              <option value="">همه دسته‌ها</option>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if cat_q == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>وضعیت موجودی</label>
+            <select name="stock_status">
+              <option value="">همه</option>
+              <option value="instock"    {% if stock_q == 'instock'    %}selected{% endif %}>موجود</option>
+              <option value="outofstock" {% if stock_q == 'outofstock' %}selected{% endif %}>ناموجود</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button type="submit" class="btn btn-primary btn-block">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              فیلتر و جستجو
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Products table -->
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px"></th>
+            <th>نام محصول</th>
+            <th style="min-width:108px">قیمت عادی (ت)</th>
+            <th style="min-width:108px">قیمت حراج (ت)</th>
+            <th style="min-width:110px">موجودی</th>
+            <th style="width:100px;text-align:center">عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>
+              <form method="post" id="row_form_{{ product.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="single_update" value="1">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+              </form>
+
+              {% if product.images %}
+                <img class="product-img" src="{{ product.images.0.src }}" alt="">
+              {% else %}
+                <div class="product-img-ph">بدون عکس</div>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="product-name">{{ product.name|truncatechars:44 }}</span>
+              <span class="product-sku">SKU: {{ product.sku|default:"—" }}</span>
+            </td>
+
+            <td>
+              <input type="number" form="row_form_{{ product.id }}" name="regular_price"
+                     class="price-inp" value="{{ product.regular_price }}" placeholder="—">
+            </td>
+
+            <td>
+              <input type="number" form="row_form_{{ product.id }}" name="sale_price"
+                     class="price-inp sale-inp" value="{{ product.sale_price }}" placeholder="—">
+            </td>
+
+            <td>
+              {% if product.stock_status == 'instock' %}
+                <span class="stock-badge badge-instock"><span class="dot"></span>موجود</span>
+              {% elif product.stock_status == 'outofstock' %}
+                <span class="stock-badge badge-outofstock"><span class="dot"></span>ناموجود</span>
+              {% else %}
+                <span class="stock-badge badge-onbackorder"><span class="dot"></span>پیش‌سفارش</span>
+              {% endif %}
+              <select form="row_form_{{ product.id }}" name="stock_status" class="stock-select">
+                <option value="instock"     {% if product.stock_status == 'instock'     %}selected{% endif %}>موجود</option>
+                <option value="outofstock"  {% if product.stock_status == 'outofstock'  %}selected{% endif %}>ناموجود</option>
+                <option value="onbackorder" {% if product.stock_status == 'onbackorder' %}selected{% endif %}>پیش‌سفارش</option>
+              </select>
+            </td>
+
+            <td style="text-align:center">
+              <div style="display:flex;gap:5px;justify-content:center">
+                <a href="{{ product.permalink }}" target="_blank"
+                   class="btn btn-sm btn-ghost" title="مشاهده در سایت">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+                <button type="submit" form="row_form_{{ product.id }}" class="btn btn-sm btn-success">ذخیره</button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                هیچ محصولی با این مشخصات یافت نشد.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="card-footer">
+      <div class="pagination">
+        {% for i in page_range %}
+          <a class="page-btn {% if current_page == i %}active{% endif %}"
+             href="?page={{ i }}&search={{ search_q }}&category={{ cat_q }}&stock_status={{ stock_q }}&sku={{ sku_q }}">
+            {{ i }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('bulkUpdateForm').addEventListener('submit', function () {
+    var btn  = document.getElementById('bulkSubmitBtn');
+    var txt  = document.getElementById('bulkText');
+    var spin = document.getElementById('bulkSpinner');
+    btn.classList.add('btn-disabled');
+    txt.textContent = 'در حال ارتباط با ووکامرس...';
+    spin.style.display = 'inline-block';
+  });
+</script>
+{% endblock %}
