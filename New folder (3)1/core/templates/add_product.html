@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div style="max-width:620px;margin:0 auto">
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px">
+    <div>
+      <p class="page-title">افزودن محصول هوشمند</p>
+      <p class="page-subtitle">تولید محتوا با هوش مصنوعی و انتشار خودکار در ووکامرس</p>
+    </div>
+    <span class="tag tag-gold">{{ store.name }}</span>
+  </div>
+
+  <!-- Info banner -->
+  <div class="info-banner">
+    <span class="info-banner-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </span>
+    <div>
+      <p class="info-banner-title">نحوه کارکرد سیستم</p>
+      <p class="info-banner-text">
+        پس از ثبت اطلاعات اولیه، هوش مصنوعی عنوان سئو شده، توضیحات کوتاه و بلند
+        (شامل هدرهای داینامیک، جدول مشخصات و سوالات متداول) را تولید کرده و محصول
+        به صورت خودکار در
+        <strong style="color:var(--text)">{{ store.name }}</strong> منتشر می‌شود.
+        <span style="color:var(--text3)">— این فرآیند ۳۰ تا ۶۰ ثانیه زمان می‌برد.</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:22px 20px">
+      <form method="post" enctype="multipart/form-data" id="addProductForm">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="mb3">
+          <label for="{{ field.id_for_label }}">
+            {{ field.label }}
+            {% if field.field.required %}<span class="req">*</span>{% endif %}
+          </label>
+
+          {{ field }}
+
+          {% if field.help_text %}
+            <p class="form-text">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+            <p class="field-error">{{ field.errors|striptags }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="divider"></div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">
+          <span id="btnSpinner" class="spinner"></span>
+          <svg id="btnIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span id="btnText">شروع تولید محتوا و انتشار در ووکامرس</span>
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('addProductForm').addEventListener('submit', function () {
+    var btn     = document.getElementById('submitBtn');
+    var text    = document.getElementById('btnText');
+    var spinner = document.getElementById('btnSpinner');
+    var icon    = document.getElementById('btnIcon');
+
+    btn.classList.add('btn-disabled');
+    text.textContent = 'در حال پردازش با هوش مصنوعی... لطفاً صبر کنید';
+    spinner.style.display = 'inline-block';
+    if (icon) icon.style.display = 'none';
+  });
+</script>
+{% endblock %}
