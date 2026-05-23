@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ورود — Core Platform</title>
+
+  <style>
+    /* ── Local fonts ── */
+    @font-face {
+      font-family: 'Vazirmatn';
+      src: url("/static/fonts/Vazirmatn-Regular.woff2") format('woff2');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Vazirmatn';
+      src: url("/static/fonts/Vazirmatn-Medium.woff2") format('woff2');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Vazirmatn';
+      src: url("/static/fonts/Vazirmatn-SemiBold.woff2") format('woff2');
+      font-weight: 600; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Vazirmatn';
+      src: url("/static/fonts/Vazirmatn-Bold.woff2") format('woff2');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+  </style>
+
+  <style>
+    :root {
+      --bg:        #f5f6f8;
+      --surface:   #ffffff;
+      --border:    #e4e7ec;
+      --border2:   #d0d5de;
+      --text:      #0d0f14;
+      --text2:     #52596a;
+      --text3:     #8b94a6;
+      --accent:    #2563eb;
+      --accent2:   #1d4ed8;
+      --accent-bg: rgba(37,99,235,.07);
+      --danger:    #dc2626;
+      --danger-bg: rgba(220,38,38,.07);
+      --danger-border: rgba(220,38,38,.2);
+      --shadow:    0 8px 32px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.04);
+      --r: 12px; --r2: 8px; --r3: 5px;
+      --transition: 0.18s cubic-bezier(.4,0,.2,1);
+    }
+
+    [data-theme="dark"] {
+      --bg:        #0a0c10;
+      --surface:   #111318;
+      --border:    #252b3b;
+      --border2:   #2e3648;
+      --text:      #eaecf2;
+      --text2:     #8892a8;
+      --text3:     #545f78;
+      --accent:    #3b82f6;
+      --accent2:   #2563eb;
+      --accent-bg: rgba(59,130,246,.1);
+      --danger:    #f87171;
+      --danger-bg: rgba(248,113,113,.08);
+      --danger-border: rgba(248,113,113,.22);
+      --shadow:    0 8px 40px rgba(0,0,0,.4);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: 'Vazirmatn', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* Background subtle pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(37,99,235,.04) 0%, transparent 60%),
+        radial-gradient(circle at 80% 20%, rgba(37,99,235,.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    @media (max-width: 420px) {
+      .login-wrap { max-width: 100%; }
+      .login-card { padding: 22px 18px; }
+      body { padding: 12px; }
+    }
+
+    /* Brand mark above card */
+    .login-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .brand-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(37,99,235,.35);
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.4px;
+    }
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* Card */
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 28px 26px;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    /* Form elements */
+    .field { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 6px;
+      letter-spacing: .1px;
+    }
+
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      top: 50%; left: 12px;
+      transform: translateY(-50%);
+      color: var(--text3);
+      pointer-events: none;
+      display: flex;
+    }
+    /* RTL so icon on right */
+    [dir="rtl"] .input-icon { left: auto; right: 12px; }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--r2);
+      padding: 10px 40px 10px 14px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      outline: none;
+      direction: ltr;
+      text-align: left;
+      transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+      appearance: none;
+    }
+    [dir="rtl"] input[type="text"],
+    [dir="rtl"] input[type="password"] {
+      padding: 10px 40px 10px 14px;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-bg);
+      background: var(--surface);
+    }
+
+    /* Error alert */
+    .alert-error {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger);
+      border-radius: var(--r2);
+      padding: 10px 13px;
+      font-size: 12.5px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      padding: 11px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--r2);
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .1px;
+      transition: all var(--transition);
+      box-shadow: 0 2px 8px rgba(37,99,235,.28);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-submit:hover {
+      background: var(--accent2);
+      box-shadow: 0 4px 16px rgba(37,99,235,.36);
+      transform: translateY(-1px);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Footer note */
+    .login-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* Theme toggle */
+    .theme-toggle-corner {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+    .theme-toggle-corner:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Theme toggle (corner) -->
+  <button class="theme-toggle-corner" id="themeToggle" aria-label="تغییر تم">
+    <svg id="iconSun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg id="iconMoon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+
+  <div class="login-wrap">
+
+    <!-- Brand -->
+    <div class="login-brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".9"/>
+          <rect x="9" y="1" width="6" height="6" rx="1.5" fill="white" opacity=".6"/>
+          <rect x="1" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".6"/>
+          <rect x="9" y="9" width="6" height="6" rx="1.5" fill="white" opacity=".35"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">mostech product</div>
+        <div class="brand-sub">پلتفرم مدیریت هوشمند</div>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div class="login-card">
+
+      {% if form.errors %}
+      <div class="alert-error">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        نام کاربری یا رمز عبور اشتباه است.
+      </div>
+      {% endif %}
+
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="id_username">نام کاربری</label>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <input type="text" id="id_username" name="username" required autofocus autocomplete="username" placeholder="username">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="id_password">رمز عبور</label>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input type="password" id="id_password" name="password" required autocomplete="current-password" placeholder="••••••••">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          ورود به داشبورد
+        </button>
+      </form>
+    </div>
+
+    <div class="login-footer"> media sanat &copy; {% now "Y" %}</div>
+  </div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn  = document.getElementById('themeToggle');
+  var sun  = document.getElementById('iconSun');
+  var moon = document.getElementById('iconMoon');
+  var KEY  = 'app_theme';
+
+  function getTheme() {
+    var s = localStorage.getItem(KEY);
+    if (s === 'dark' || s === 'light') return s;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function apply(theme) {
+    root.setAttribute('data-theme', theme);
+    sun.style.display  = theme === 'dark' ? 'block' : 'none';
+    moon.style.display = theme === 'dark' ? 'none'  : 'block';
+    localStorage.setItem(KEY, theme);
+  }
+
+  apply(getTheme());
+
+  btn.addEventListener('click', function () {
+    apply(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY && e.newValue) apply(e.newValue);
+  });
+})();
+</script>
+
+</body>
+</html>

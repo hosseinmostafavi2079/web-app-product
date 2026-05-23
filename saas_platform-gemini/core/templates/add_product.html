@@ -1,0 +1,651 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{# ── کپی استایل‌های سیستم راهنما از dashboard.html ── #}
+<style>
+.help-fab {
+  position: fixed; left: 24px; bottom: 28px; z-index: 9999;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(37,99,235,.45), 0 2px 6px rgba(0,0,0,.15);
+  transition: all .25s cubic-bezier(.34,1.56,.64,1); font-family: 'IRANSans', sans-serif;
+}
+.help-fab:hover { transform: scale(1.1); box-shadow: 0 8px 28px rgba(37,99,235,.55); }
+.help-fab:active { transform: scale(.96); }
+.help-fab .fab-pulse {
+  position: absolute; top: -3px; right: -3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #10b981; border: 2px solid var(--bg);
+  animation: fabPulse 2.5s ease infinite;
+}
+@keyframes fabPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.25);opacity:.7} }
+.help-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 10000;
+  opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.help-overlay.open { opacity: 1; pointer-events: all; }
+.help-panel {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: min(500px, 94vw);
+  background: var(--bg2); border-left: 1px solid var(--border);
+  z-index: 10001; display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow: -8px 0 48px rgba(0,0,0,.2);
+}
+.help-panel.open { transform: translateX(0); }
+.hp-header {
+  padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; flex-shrink: 0; background: var(--bg3);
+}
+.hp-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--accent-bg); border: 1px solid var(--accent-border);
+  color: var(--accent); font-size: 10px; font-weight: 600;
+  padding: 3px 9px; border-radius: 20px; margin-bottom: 8px; letter-spacing: .3px;
+}
+.hp-title { font-size: 17px; font-weight: 600; color: var(--text); letter-spacing: -.3px; line-height: 1.3; }
+.hp-subtitle { font-size: 12px; color: var(--text3); margin-top: 3px; }
+.hp-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent; color: var(--text3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; flex-shrink: 0;
+}
+.hp-close:hover { background: var(--bg4); color: var(--text); }
+.hp-tabs {
+  display: flex; gap: 0; padding: 0 22px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg2);
+}
+.hp-tab {
+  font-size: 12px; font-weight: 500; color: var(--text3);
+  padding: 10px 14px; cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all .2s;
+  white-space: nowrap; font-family: 'IRANSans', sans-serif;
+  background: none; border-top: none; border-left: none; border-right: none;
+}
+.hp-tab:hover { color: var(--text2); }
+.hp-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.hp-body { flex: 1; overflow-y: auto; padding: 20px 22px; }
+.hp-body::-webkit-scrollbar { width: 4px; }
+.hp-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.help-section { margin-bottom: 24px; }
+.help-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.hs-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px;
+}
+.hs-icon-blue   { background: var(--accent-bg); color: var(--accent); }
+.hs-icon-gold   { background: var(--gold-bg);   color: var(--gold); }
+.hs-icon-green  { background: var(--success-bg); color: var(--success); }
+.hs-icon-info   { background: var(--info-bg);    color: var(--info); }
+.hs-icon-warn   { background: var(--warn-bg);    color: var(--warn); }
+.hs-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.hs-desc  { font-size: 12px; color: var(--text2); margin-top: 1px; line-height: 1.5; }
+.help-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 9px; padding: 13px 15px; margin-bottom: 10px; transition: border-color .2s;
+}
+.help-card:hover { border-color: var(--accent-border); }
+.hc-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .4px; text-transform: uppercase; margin-bottom: 5px; }
+.hc-text { font-size: 12.5px; color: var(--text2); line-height: 1.7; }
+.hc-text strong { color: var(--text); font-weight: 600; }
+.hc-text code {
+  background: var(--bg4); border: 1px solid var(--border); border-radius: 4px;
+  padding: 1px 5px; font-size: 11px; color: var(--accent); font-family: monospace;
+}
+.help-steps { display: flex; flex-direction: column; gap: 0; }
+.help-step { display: flex; gap: 12px; padding-bottom: 18px; position: relative; }
+.help-step::before {
+  content: ''; position: absolute; right: 15px; top: 30px; bottom: 0;
+  width: 1px; background: var(--border);
+}
+.help-step:last-child::before { display: none; }
+.hs-num {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; z-index: 1; position: relative;
+}
+.hs-content { flex: 1; padding-top: 5px; }
+.hs-step-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.hs-step-desc  { font-size: 12px; color: var(--text2); line-height: 1.65; }
+.help-tip {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 11px 13px; border-radius: 8px;
+  font-size: 12px; line-height: 1.65; margin-bottom: 10px;
+}
+.tip-success { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); }
+.tip-warn    { background: var(--warn-bg);    border: 1px solid var(--warn-border);    color: var(--warn); }
+.tip-info    { background: var(--info-bg);    border: 1px solid var(--info-border);    color: var(--info); }
+.tip-gold    { background: var(--gold-bg);    border: 1px solid var(--gold-border);    color: var(--gold); }
+.help-tip .tip-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+.help-tip .tip-body { color: var(--text2); }
+.help-tip .tip-body strong { color: var(--text); }
+.hp-tab-content { display: none; }
+.hp-tab-content.active { display: block; }
+
+/* توضیح گام‌های AI */
+.ai-flow {
+  display: flex; flex-direction: column; gap: 8px; margin: 12px 0;
+}
+.ai-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-radius: 8px;
+  background: var(--bg3); border: 1px solid var(--border);
+  position: relative;
+}
+.ai-step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ai-step-body { flex: 1; }
+.ai-step-title { font-size: 12px; font-weight: 600; color: var(--text); }
+.ai-step-desc  { font-size: 11.5px; color: var(--text2); margin-top: 2px; line-height: 1.55; }
+.ai-duration {
+  font-size: 10px; color: var(--text3); background: var(--bg4);
+  padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+}
+
+/* توضیح زمان */
+.time-bar {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 9px;
+  padding: 12px 14px; margin-bottom: 10px;
+}
+.time-bar-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.time-bar-track {
+  height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden;
+}
+.time-bar-fill { height: 100%; border-radius: 3px; transition: width .8s ease; }
+
+/* tooltip */
+.help-tooltip-wrap { position: relative; display: inline-flex; }
+.help-tooltip-btn {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent-bg); border: 1px solid var(--accent-border);
+  color: var(--accent); font-size: 10px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; margin-right: 6px; flex-shrink: 0; transition: all .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.help-tooltip-btn:hover { background: var(--accent); color: #fff; }
+.help-tooltip-box {
+  position: fixed;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; width: min(260px, 85vw); font-size: 12px; color: var(--text2);
+  line-height: 1.65; box-shadow: 0 8px 32px rgba(0,0,0,.18); z-index: 99999;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  top: 0; left: 0;
+}
+.help-tooltip-box.tt-visible { opacity: 1; pointer-events: all; }
+.tt-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+</style>
+
+<!-- دکمه شناور -->
+<button class="help-fab" id="helpFab" title="راهنمای افزودن محصول">
+  <div class="fab-pulse"></div>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+</button>
+
+<div class="help-overlay" id="helpOverlay"></div>
+
+<!-- پنل راهنما -->
+<div class="help-panel" id="helpPanel" dir="rtl">
+  <div class="hp-header">
+    <div>
+      <div class="hp-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        افزودن هوشمند
+      </div>
+      <div class="hp-title">افزودن محصول با هوش مصنوعی</div>
+      <div class="hp-subtitle">راهنمای کامل فرآیند تولید محتوا</div>
+    </div>
+    <button class="hp-close" id="helpClose">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="hp-tabs">
+    <button class="hp-tab active" data-tab="howworks">چطور کار می‌کند؟</button>
+    <button class="hp-tab" data-tab="fields">فیلدها</button>
+    <button class="hp-tab" data-tab="images">تصاویر</button>
+    <button class="hp-tab" data-tab="tips">نکات مهم</button>
+  </div>
+
+  <div class="hp-body">
+
+    <!-- تب: چطور کار می‌کند -->
+    <div class="hp-tab-content active" data-panel="howworks">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-blue">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">فرآیند ۵ مرحله‌ای هوش مصنوعی</div>
+            <div class="hs-desc">بعد از کلیک روی «شروع»، این اتفاق‌ها می‌افتد</div>
+          </div>
+        </div>
+
+        <div class="ai-flow">
+          <div class="ai-step">
+            <div class="ai-step-num">۱</div>
+            <div class="ai-step-body">
+              <div class="ai-step-title">تولید URL سئو شده (Slug)</div>
+              <div class="ai-step-desc">هوش مصنوعی یک URL انگلیسی کوتاه و بهینه برای موتورهای جستجو می‌سازد. مثال: <code>washing-machine-drain-pump-lg</code></div>
+            </div>
+            <div class="ai-duration">~۵ ثانیه</div>
+          </div>
+          <div class="ai-step">
+            <div class="ai-step-num">۲</div>
+            <div class="ai-step-body">
+              <div class="ai-step-title">تولید توضیحات کوتاه فارسی</div>
+              <div class="ai-step-desc">یک معرفی ۲ خطی حرفه‌ای و سئو شده به فارسی — شامل کلمات کلیدی مهم</div>
+            </div>
+            <div class="ai-duration">~۸ ثانیه</div>
+          </div>
+          <div class="ai-step">
+            <div class="ai-step-num">۳</div>
+            <div class="ai-step-body">
+              <div class="ai-step-title">تولید محتوای کامل HTML</div>
+              <div class="ai-step-desc">توضیحات بلند کامل: هدرها، جدول مشخصات، سوالات متداول (FAQ) و لینک‌های داخلی هوشمند از پایگاه داده فروشگاه شما</div>
+            </div>
+            <div class="ai-duration">~۳۰ ثانیه</div>
+          </div>
+          <div class="ai-step">
+            <div class="ai-step-num">۴</div>
+            <div class="ai-step-body">
+              <div class="ai-step-title">آپلود تصاویر در وردپرس</div>
+              <div class="ai-step-desc">هر تصویری که آپلود کردید، ابتدا در کتابخانه رسانه وردپرس ذخیره می‌شود</div>
+            </div>
+            <div class="ai-duration">~۵ ثانیه</div>
+          </div>
+          <div class="ai-step">
+            <div class="ai-step-num">۵</div>
+            <div class="ai-step-body">
+              <div class="ai-step-title">انتشار در ووکامرس</div>
+              <div class="ai-step-desc">محصول کامل با تمام محتوا، تصاویر و متادیتاها در ووکامرس منتشر می‌شود — آماده فروش!</div>
+            </div>
+            <div class="ai-duration">~۵ ثانیه</div>
+          </div>
+        </div>
+
+        <div class="help-tip tip-warn">
+          <span class="tip-icon">⏱</span>
+          <div class="tip-body">کل فرآیند معمولاً <strong>۳۰ تا ۶۰ ثانیه</strong> طول می‌کشد. صفحه را بستن <strong>نکنید</strong>!</div>
+        </div>
+        <div class="help-tip tip-success">
+          <span class="tip-icon">✓</span>
+          <div class="tip-body">بعد از موفقیت، یک پیام سبز «محصول با موفقیت منتشر شد» نمایش می‌دهد و از سهمیه ماهانه شما کم می‌کند.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- تب: فیلدها -->
+    <div class="hp-tab-content" data-panel="fields">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-info">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">راهنمای پر کردن فیلدها</div>
+            <div class="hs-desc">هر فیلد چه تأثیری دارد؟</div>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">⭐ نام محصول (اجباری)</div>
+          <div class="hc-text">
+            <strong>مهم‌ترین فیلد!</strong> هوش مصنوعی تمام محتوا را بر اساس این نام تولید می‌کند. هرچه نام دقیق‌تر باشد، محتوا بهتر می‌شود.
+            <br><br>
+            ✅ خوب: <code>پمپ تخلیه لباسشویی ال‌جی مدل WM714</code><br>
+            ❌ بد: <code>پمپ</code>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">💰 قیمت (تومان) — اجباری</div>
+          <div class="hc-text">
+            قیمت را به <strong>تومان</strong> و بدون ممیز وارد کنید. مثال: <code>500000</code> یعنی ۵۰۰ هزار تومان.
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">🔑 شناسه محصول (SKU) — اختیاری</div>
+          <div class="hc-text">
+            کد یکتای محصول برای انبارگردانی. اگر ندارید خالی بگذارید. اگر وارد کنید، بعداً می‌توانید محصول را با این کد پیدا و ویرایش کنید.
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">📁 دسته‌بندی ووکامرس — اختیاری</div>
+          <div class="hc-text">
+            دسته‌بندی محصول در سایت شما. لیست از خود سایت بارگذاری می‌شود. اگر دسته‌بندی جدیدی نمی‌بینید، دکمه <strong>بروزرسانی</strong> (🔄) در منو بالا را بزنید.
+          </div>
+        </div>
+
+        <div class="help-tip tip-gold">
+          <span class="tip-icon">⭐</span>
+          <div class="tip-body">برای بهترین نتیجه سئو: نام محصول را دقیق و کامل بنویسید — مدل، برند و نوع را ذکر کنید.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- تب: تصاویر -->
+    <div class="hp-tab-content" data-panel="images">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-green">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">آپلود تصاویر محصول</div>
+            <div class="hs-desc">نکات مهم آپلود تصویر</div>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">اولین تصویر = تصویر شاخص</div>
+          <div class="hc-text">
+            از بین تصاویری که انتخاب می‌کنید، <strong>اولین تصویر</strong> به عنوان تصویر اصلی (Featured Image) محصول تنظیم می‌شود. بقیه در گالری قرار می‌گیرند.
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">چند تصویر همزمان</div>
+          <div class="hc-text">
+            می‌توانید <strong>چند تصویر را یکجا</strong> انتخاب کنید. در ویندوز: Ctrl + کلیک. در مک: Cmd + کلیک.
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">فرمت‌های پشتیبانی شده</div>
+          <div class="hc-text">
+            <code>JPG</code> / <code>JPEG</code> / <code>PNG</code> / <code>WebP</code>
+            <br>حجم توصیه شده: زیر ۲ مگابایت برای هر عکس
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">بدون تصویر هم کار می‌کند</div>
+          <div class="hc-text">
+            اگر تصویری آپلود نکنید، محصول بدون عکس در ووکامرس ثبت می‌شود و بعداً می‌توانید از پنل ووکامرس عکس اضافه کنید.
+          </div>
+        </div>
+
+        <div class="help-tip tip-info">
+          <span class="tip-icon">💡</span>
+          <div class="tip-body">تصاویر مستقیماً در <strong>کتابخانه رسانه وردپرس</strong> آپلود می‌شوند، نه در سرور پلتفرم ما.</div>
+        </div>
+        <div class="help-tip tip-warn">
+          <span class="tip-icon">⚠</span>
+          <div class="tip-body">برای آپلود تصویر، باید <strong>Application Password وردپرس</strong> در تنظیمات فروشگاه وارد شده باشد. اگر خطای آپلود دارید، با پشتیبانی تماس بگیرید.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- تب: نکات مهم -->
+    <div class="hp-tab-content" data-panel="tips">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-gold">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">نکات طلایی</div>
+            <div class="hs-desc">برای بهترین نتیجه بخوانید</div>
+          </div>
+        </div>
+
+        <div class="help-tip tip-success">
+          <span class="tip-icon">✓</span>
+          <div class="tip-body"><strong>لینک‌های داخلی:</strong> قبل از شروع، از پنل ادمین لینک‌های صفحات مهم سایتتان را در بخش InternalLink ثبت کنید. هوش مصنوعی آن‌ها را به صورت طبیعی در متن جای می‌دهد.</div>
+        </div>
+        <div class="help-tip tip-info">
+          <span class="tip-icon">💡</span>
+          <div class="tip-body"><strong>اتصال اینترنت:</strong> از اتصال پایدار به اینترنت مطمئن شوید. اگر اتصال قطع شود، باید دوباره از اول شروع کنید.</div>
+        </div>
+        <div class="help-tip tip-warn">
+          <span class="tip-icon">⚠</span>
+          <div class="tip-body"><strong>صفحه را نبندید:</strong> تا زمانی که پیام موفقیت نشان داده نشده، صفحه را نبندید یا تغییر ندهید.</div>
+        </div>
+        <div class="help-tip tip-gold">
+          <span class="tip-icon">⭐</span>
+          <div class="tip-body"><strong>در صورت خطا:</strong> اگر محصول ثبت نشد، از سهمیه کم نمی‌شود. می‌توانید دوباره امتحان کنید.</div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">بعد از انتشار چه اتفاقی می‌افتد؟</div>
+          <div class="hc-text">
+            ۱. محصول بلافاصله در سایت <strong>منتشر</strong> می‌شود<br>
+            ۲. یک رکورد در <strong>لاگ داشبورد</strong> ثبت می‌شود<br>
+            ۳. سهمیه ماهانه شما <strong>یک واحد کاهش</strong> می‌یابد<br>
+            ۴. می‌توانید محصول را از <strong>صفحه مدیریت محصولات</strong> ویرایش کنید
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     محتوای اصلی فرم با tooltip
+══════════════════════════════════════════════ -->
+
+<div style="max-width:620px;margin:0 auto">
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <p class="page-title">افزودن محصول هوشمند</p>
+        <span class="help-tooltip-wrap">
+          <button class="help-tooltip-btn">?</button>
+          <div class="help-tooltip-box">
+            <div class="tt-title">چرا «هوشمند»؟</div>
+            فقط اطلاعات پایه را وارد کنید — هوش مصنوعی توضیحات، سئو، لینک‌های داخلی و تمام محتوا را خودکار می‌سازد.
+          </div>
+        </span>
+      </div>
+      <p class="page-subtitle">تولید محتوا با هوش مصنوعی و انتشار خودکار در ووکامرس</p>
+    </div>
+    <span class="tag tag-gold">{{ store.name }}</span>
+  </div>
+
+  <!-- Info banner با tooltip -->
+  <div class="info-banner">
+    <span class="info-banner-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </span>
+    <div>
+      <p class="info-banner-title">نحوه کارکرد سیستم</p>
+      <p class="info-banner-text">
+        پس از ثبت اطلاعات اولیه، هوش مصنوعی عنوان سئو شده، توضیحات کوتاه و بلند
+        (شامل هدرهای داینامیک، جدول مشخصات و سوالات متداول) را تولید کرده و محصول
+        به صورت خودکار در
+        <strong style="color:var(--text)">{{ store.name }}</strong> منتشر می‌شود.
+        <span style="color:var(--text3)">— این فرآیند ۳۰ تا ۶۰ ثانیه زمان می‌برد.</span>
+        <a href="#" id="openHelpFromBanner" style="color:var(--accent);font-size:12px;margin-right:6px;text-decoration:underline">راهنمای کامل ←</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:22px 20px">
+      <form method="post" enctype="multipart/form-data" id="addProductForm">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="mb3">
+          <label for="{{ field.id_for_label }}" style="display:flex;align-items:center;gap:4px">
+            {{ field.label }}
+            {% if field.field.required %}<span class="req">*</span>{% endif %}
+            <!-- Tooltip اختصاصی هر فیلد -->
+            <span class="help-tooltip-wrap" style="margin-right:auto">
+              {% if field.name == 'product_name' %}
+              <button type="button" class="help-tooltip-btn">?</button>
+              <div class="help-tooltip-box">
+                <div class="tt-title">نام محصول — مهم‌ترین فیلد</div>
+                نام دقیق و کامل بنویسید. هوش مصنوعی بر اساس این نام تمام محتوا را تولید می‌کند. مثال: «پمپ تخلیه لباسشویی ال‌جی مدل WM714»
+              </div>
+              {% elif field.name == 'price' %}
+              <button type="button" class="help-tooltip-btn">?</button>
+              <div class="help-tooltip-box">
+                <div class="tt-title">قیمت به تومان</div>
+                عدد را بدون ممیز وارد کنید. مثال: ۵۰۰۰۰۰ = پانصد هزار تومان. این قیمت دقیقاً در ووکامرس ثبت می‌شود.
+              </div>
+              {% elif field.name == 'sku' %}
+              <button type="button" class="help-tooltip-btn">?</button>
+              <div class="help-tooltip-box">
+                <div class="tt-title">شناسه انبار (SKU)</div>
+                کد یکتای محصول برای انبارگردانی. اختیاری است. اگر وارد کنید، بعداً با SKU می‌توانید محصول را سریع پیدا کنید.
+              </div>
+              {% elif field.name == 'category_id' %}
+              <button type="button" class="help-tooltip-btn">?</button>
+              <div class="help-tooltip-box">
+                <div class="tt-title">دسته‌بندی سایت</div>
+                لیست از سایت ووکامرس شما بارگذاری می‌شود. اگر دسته جدیدی نمی‌بینید، دکمه 🔄 در منو بالا را بزنید تا کش پاک شود.
+              </div>
+              {% elif field.name == 'images' %}
+              <button type="button" class="help-tooltip-btn">?</button>
+              <div class="help-tooltip-box">
+                <div class="tt-title">تصاویر محصول</div>
+                اولین تصویر = تصویر شاخص. Ctrl+کلیک برای چند تصویر همزمان. فرمت‌های JPG، PNG و WebP پشتیبانی می‌شود.
+              </div>
+              {% endif %}
+            </span>
+          </label>
+
+          {{ field }}
+
+          {% if field.help_text %}
+            <p class="form-text">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+            <p class="field-error">{{ field.errors|striptags }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="divider"></div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">
+          <span id="btnSpinner" class="spinner"></span>
+          <svg id="btnIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span id="btnText">شروع تولید محتوا و انتشار در ووکامرس</span>
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+
+  /* ─── اسپینر فرم ─── */
+  document.getElementById('addProductForm').addEventListener('submit', function () {
+    var btn     = document.getElementById('submitBtn');
+    var text    = document.getElementById('btnText');
+    var spinner = document.getElementById('btnSpinner');
+    var icon    = document.getElementById('btnIcon');
+    btn.classList.add('btn-disabled');
+    text.textContent = 'در حال پردازش با هوش مصنوعی... لطفاً صبر کنید';
+    spinner.style.display = 'inline-block';
+    if (icon) icon.style.display = 'none';
+  });
+
+  /* ─── Tooltip هوشمند ─── */
+  (function() {
+    var activeBox = null;
+    function positionTooltip(btn, box) {
+      var r = btn.getBoundingClientRect();
+      var bw = Math.min(260, window.innerWidth * 0.85);
+      var estimatedH = 120;
+      var top = r.top - estimatedH - 10;
+      var left = r.left + r.width / 2 - bw / 2;
+      if (left < 8) left = 8;
+      if (left + bw > window.innerWidth - 8) left = window.innerWidth - bw - 8;
+      if (top < 8) top = r.bottom + 10;
+      box.style.top  = top + 'px';
+      box.style.left = left + 'px';
+      box.style.width = bw + 'px';
+    }
+    document.querySelectorAll('.help-tooltip-wrap').forEach(function(wrap) {
+      var btn = wrap.querySelector('.help-tooltip-btn');
+      var box = wrap.querySelector('.help-tooltip-box');
+      if (!btn || !box) return;
+      function show() {
+        if (activeBox && activeBox !== box) { activeBox.classList.remove('tt-visible'); }
+        positionTooltip(btn, box);
+        box.classList.add('tt-visible');
+        activeBox = box;
+      }
+      function hide() { box.classList.remove('tt-visible'); if (activeBox === box) activeBox = null; }
+      btn.addEventListener('mouseenter', show);
+      btn.addEventListener('mouseleave', hide);
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (box.classList.contains('tt-visible')) { hide(); } else { show(); }
+      });
+    });
+    document.addEventListener('click', function() { if (activeBox) { activeBox.classList.remove('tt-visible'); activeBox = null; } });
+    document.addEventListener('scroll', function() { if (activeBox) { activeBox.classList.remove('tt-visible'); activeBox = null; } }, true);
+  })();
+
+  /* ─── پنل راهنما ─── */
+  var fab      = document.getElementById('helpFab');
+  var overlay  = document.getElementById('helpOverlay');
+  var panel    = document.getElementById('helpPanel');
+  var closeBtn = document.getElementById('helpClose');
+  var banner   = document.getElementById('openHelpFromBanner');
+
+  function openHelp() {
+    overlay.classList.add('open');
+    panel.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    var pulse = fab.querySelector('.fab-pulse');
+    if (pulse) { setTimeout(function(){ pulse.style.display='none'; }, 600); }
+  }
+  function closeHelp() {
+    overlay.classList.remove('open');
+    panel.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  fab.addEventListener('click', openHelp);
+  overlay.addEventListener('click', closeHelp);
+  closeBtn.addEventListener('click', closeHelp);
+  if (banner) { banner.addEventListener('click', function(e){ e.preventDefault(); openHelp(); }); }
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeHelp(); });
+
+  /* ─── تب‌های راهنما ─── */
+  document.querySelectorAll('.hp-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var target = this.dataset.tab;
+      document.querySelectorAll('.hp-tab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.hp-tab-content').forEach(function(c){ c.classList.remove('active'); });
+      this.classList.add('active');
+      var pane = document.querySelector('[data-panel="' + target + '"]');
+      if (pane) pane.classList.add('active');
+    });
+  });
+
+})();
+</script>
+{% endblock %}

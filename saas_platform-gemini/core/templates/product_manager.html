@@ -1,0 +1,784 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+/* ─── استایل‌های مشترک راهنما ─── */
+.help-fab {
+  position: fixed; left: 24px; bottom: 28px; z-index: 9999;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(37,99,235,.45), 0 2px 6px rgba(0,0,0,.15);
+  transition: all .25s cubic-bezier(.34,1.56,.64,1);
+}
+.help-fab:hover { transform: scale(1.1); box-shadow: 0 8px 28px rgba(37,99,235,.55); }
+.help-fab .fab-pulse {
+  position: absolute; top: -3px; right: -3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #f59e0b; border: 2px solid var(--bg);
+  animation: fabPulse 2.5s ease infinite;
+}
+@keyframes fabPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.25);opacity:.7} }
+.help-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 10000;
+  opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  backdrop-filter: blur(3px);
+}
+.help-overlay.open { opacity: 1; pointer-events: all; }
+.help-panel {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: min(500px, 94vw); background: var(--bg2);
+  border-left: 1px solid var(--border); z-index: 10001;
+  display: flex; flex-direction: column;
+  transform: translateX(100%);
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow: -8px 0 48px rgba(0,0,0,.2);
+}
+.help-panel.open { transform: translateX(0); }
+.hp-header {
+  padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; flex-shrink: 0; background: var(--bg3);
+}
+.hp-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--gold-bg); border: 1px solid var(--gold-border);
+  color: var(--gold); font-size: 10px; font-weight: 600;
+  padding: 3px 9px; border-radius: 20px; margin-bottom: 8px;
+}
+.hp-title { font-size: 17px; font-weight: 600; color: var(--text); letter-spacing: -.3px; }
+.hp-subtitle { font-size: 12px; color: var(--text3); margin-top: 3px; }
+.hp-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent; color: var(--text3);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s;
+}
+.hp-close:hover { background: var(--bg4); color: var(--text); }
+.hp-tabs {
+  display: flex; padding: 0 22px;
+  border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg2);
+}
+.hp-tab {
+  font-size: 12px; font-weight: 500; color: var(--text3);
+  padding: 10px 14px; cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all .2s; white-space: nowrap; font-family: 'IRANSans', sans-serif;
+  background: none; border-top: none; border-left: none; border-right: none;
+}
+.hp-tab:hover { color: var(--text2); }
+.hp-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.hp-body { flex: 1; overflow-y: auto; padding: 20px 22px; }
+.hp-body::-webkit-scrollbar { width: 4px; }
+.hp-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.help-section { margin-bottom: 24px; }
+.help-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.hs-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.hs-icon-blue  { background: var(--accent-bg);  color: var(--accent); }
+.hs-icon-gold  { background: var(--gold-bg);    color: var(--gold); }
+.hs-icon-green { background: var(--success-bg); color: var(--success); }
+.hs-icon-warn  { background: var(--warn-bg);    color: var(--warn); }
+.hs-icon-danger{ background: var(--danger-bg);  color: var(--danger); }
+.hs-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.hs-desc  { font-size: 12px; color: var(--text2); margin-top: 1px; line-height: 1.5; }
+.help-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 9px; padding: 13px 15px; margin-bottom: 10px; transition: border-color .2s;
+}
+.help-card:hover { border-color: var(--accent-border); }
+.hc-label { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: .4px; text-transform: uppercase; margin-bottom: 5px; }
+.hc-text { font-size: 12.5px; color: var(--text2); line-height: 1.7; }
+.hc-text strong { color: var(--text); font-weight: 600; }
+.hc-text code {
+  background: var(--bg4); border: 1px solid var(--border); border-radius: 4px;
+  padding: 1px 5px; font-size: 11px; color: var(--accent); font-family: monospace;
+}
+.help-steps { display: flex; flex-direction: column; gap: 0; }
+.help-step { display: flex; gap: 12px; padding-bottom: 18px; position: relative; }
+.help-step::before { content: ''; position: absolute; right: 15px; top: 30px; bottom: 0; width: 1px; background: var(--border); }
+.help-step:last-child::before { display: none; }
+.hs-num { width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; position: relative; }
+.hs-content { flex: 1; padding-top: 5px; }
+.hs-step-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.hs-step-desc  { font-size: 12px; color: var(--text2); line-height: 1.65; }
+.help-tip { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: 8px; font-size: 12px; line-height: 1.65; margin-bottom: 10px; }
+.tip-success { background: var(--success-bg); border: 1px solid var(--success-border); }
+.tip-warn    { background: var(--warn-bg);    border: 1px solid var(--warn-border); }
+.tip-info    { background: var(--info-bg);    border: 1px solid var(--info-border); }
+.tip-danger  { background: var(--danger-bg);  border: 1px solid var(--danger-border); }
+.tip-gold    { background: var(--gold-bg);    border: 1px solid var(--gold-border); }
+.help-tip .tip-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+.help-tip .tip-body { color: var(--text2); }
+.help-tip .tip-body strong { color: var(--text); }
+.hp-tab-content { display: none; }
+.hp-tab-content.active { display: block; }
+
+/* tooltip */
+.help-tooltip-wrap { position: relative; display: inline-flex; }
+.help-tooltip-btn {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent-bg); border: 1px solid var(--accent-border);
+  color: var(--accent); font-size: 10px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; margin-right: 6px; flex-shrink: 0; transition: all .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.help-tooltip-btn:hover { background: var(--accent); color: #fff; }
+.help-tooltip-box {
+  position: fixed;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 14px; width: min(270px, 85vw); font-size: 12px; color: var(--text2);
+  line-height: 1.65; box-shadow: 0 8px 32px rgba(0,0,0,.18); z-index: 99999;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  top: 0; left: 0;
+}
+.help-tooltip-box.tt-visible { opacity: 1; pointer-events: all; }
+.tt-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+
+/* ── استایل‌های جدول ── */
+.panel-wrap { max-width: 960px; margin: 0 auto; }
+.price-inp {
+  padding: 6px 10px; font-size: 12px; border-radius: var(--r3); width: 100%;
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+  font-family: 'IRANSans', sans-serif; outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  appearance: none; -webkit-appearance: none;
+}
+.price-inp:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+.price-inp.sale-inp { border-color: var(--danger-border); }
+.price-inp.sale-inp:focus { border-color: var(--danger); box-shadow: 0 0 0 2px var(--danger-bg); }
+.product-img { width: 38px; height: 38px; border-radius: 7px; object-fit: cover; border: 1px solid var(--border); display: block; }
+.product-img-ph { width: 38px; height: 38px; border-radius: 7px; background: var(--bg4); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); color: var(--text4); font-size: 8px; text-align: center; line-height: 1.3; }
+.product-name { font-weight: 500; color: var(--text); font-size: 13px; }
+.product-sku  { font-size: 11px; color: var(--text3); direction: ltr; display: block; margin-top: 2px; }
+.stock-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; border: 1px solid transparent; }
+.badge-instock     { background: var(--success-bg); color: var(--success); border-color: var(--success-border); }
+.badge-outofstock  { background: var(--danger-bg);  color: var(--danger);  border-color: var(--danger-border); }
+.badge-onbackorder { background: var(--warn-bg);    color: var(--warn);    border-color: var(--warn-border); }
+.stock-select { margin-top: 5px; font-size: 11px; padding: 4px 8px; border-radius: var(--r3); background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-family: 'IRANSans', sans-serif; width: 100%; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
+.stock-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+</style>
+
+<!-- دکمه شناور -->
+<button class="help-fab" id="helpFab" title="راهنمای مدیریت محصولات">
+  <div class="fab-pulse"></div>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+</button>
+
+<div class="help-overlay" id="helpOverlay"></div>
+
+<!-- پنل راهنما -->
+<div class="help-panel" id="helpPanel" dir="rtl">
+  <div class="hp-header">
+    <div>
+      <div class="hp-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        مدیریت محصولات
+      </div>
+      <div class="hp-title">راهنمای مدیریت محصولات</div>
+      <div class="hp-subtitle">ویرایش، جستجو و تغییر قیمت گروهی</div>
+    </div>
+    <button class="hp-close" id="helpClose">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="hp-tabs">
+    <button class="hp-tab active" data-tab="overview">نمای کلی</button>
+    <button class="hp-tab" data-tab="search">جستجو و فیلتر</button>
+    <button class="hp-tab" data-tab="edit">ویرایش تکی</button>
+    <button class="hp-tab" data-tab="bulk">تغییر گروهی</button>
+  </div>
+
+  <div class="hp-body">
+
+    <!-- نمای کلی -->
+    <div class="hp-tab-content active" data-panel="overview">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-gold">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">صفحه مدیریت محصولات</div>
+            <div class="hs-desc">کنترل کامل محصولات فروشگاه ووکامرس</div>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">این صفحه چه کاری می‌کند؟</div>
+          <div class="hc-text">
+            مستقیماً به ووکامرس وصل می‌شود و به شما امکان می‌دهد:
+            <br>• قیمت عادی و حراجی محصولات را تغییر دهید
+            <br>• وضعیت موجودی را به موجود / ناموجود تبدیل کنید
+            <br>• محصولات را با نام، SKU یا دسته‌بندی جستجو کنید
+            <br>• قیمت <strong>تمام محصولات یک دسته را</strong> گروهی تغییر دهید
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">ساختار صفحه</div>
+          <div class="hc-text">
+            ۱. <strong>کارت زرد</strong> — تغییر قیمت گروهی درصدی<br>
+            ۲. <strong>کارت جستجو</strong> — فیلتر کردن محصولات<br>
+            ۳. <strong>جدول محصولات</strong> — ویرایش تکی هر محصول
+          </div>
+        </div>
+
+        <div class="help-tip tip-info">
+          <span class="tip-icon">💡</span>
+          <div class="tip-body">این صفحه فقط برای کسانی در دسترس است که پلن اشتراک آن‌ها <strong>قابلیت «مدیریت قیمت»</strong> را داشته باشد.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- جستجو و فیلتر -->
+    <div class="hp-tab-content" data-panel="search">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-blue">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">جستجو و فیلتر محصولات</div>
+            <div class="hs-desc">چطور محصول خاص را پیدا کنم؟</div>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">جستجو در نام محصول</div>
+          <div class="hc-text">
+            بخشی از نام محصول را بنویسید. ووکامرس جستجو می‌کند. مثال: <code>پمپ</code> تمام محصولاتی که «پمپ» در نامشان دارند را نشان می‌دهد.
+          </div>
+        </div>
+        <div class="help-card">
+          <div class="hc-label">جستجو با SKU</div>
+          <div class="hc-text">
+            اگر کد انبار (SKU) محصول را می‌دانید، دقیق‌ترین روش جستجوست. <strong>باید دقیقاً</strong> همان کد باشد.
+          </div>
+        </div>
+        <div class="help-card">
+          <div class="hc-label">فیلتر دسته‌بندی</div>
+          <div class="hc-text">
+            همه محصولات یک دسته را نشان می‌دهد. با فیلتر گروهی ترکیب کنید تا دسته‌ای را انتخاب و قیمتش را تغییر دهید.
+          </div>
+        </div>
+        <div class="help-card">
+          <div class="hc-label">فیلتر موجودی</div>
+          <div class="hc-text">
+            فقط محصولات «موجود» یا «ناموجود» را نشان می‌دهد — مفید برای به‌روزرسانی سریع موجودی.
+          </div>
+        </div>
+
+        <div class="help-tip tip-info">
+          <span class="tip-icon">💡</span>
+          <div class="tip-body">هر صفحه <strong>۲۰ محصول</strong> نشان می‌دهد. برای دیدن صفحات بعدی از دکمه‌های پایین صفحه استفاده کنید.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ویرایش تکی -->
+    <div class="hp-tab-content" data-panel="edit">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-green">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">ویرایش تکی محصول</div>
+            <div class="hs-desc">تغییر قیمت، حراج و موجودی</div>
+          </div>
+        </div>
+
+        <div class="help-steps">
+          <div class="help-step">
+            <div class="hs-num">۱</div>
+            <div class="hs-content">
+              <div class="hs-step-title">محصول را پیدا کنید</div>
+              <div class="hs-step-desc">از بخش جستجو استفاده کنید یا در صفحات مرور کنید.</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="hs-num">۲</div>
+            <div class="hs-content">
+              <div class="hs-step-title">قیمت‌ها را تغییر دهید</div>
+              <div class="hs-step-desc">در ستون «قیمت عادی» عدد جدید وارد کنید. برای حراجی، ستون «قیمت حراج» را پر کنید. اگر حراجی نمی‌خواهید، ستون حراج را خالی بگذارید.</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="hs-num">۳</div>
+            <div class="hs-content">
+              <div class="hs-step-title">موجودی را تنظیم کنید</div>
+              <div class="hs-step-desc">از منوی کشویی زیر بج موجودی، وضعیت را انتخاب کنید: موجود / ناموجود / پیش‌سفارش</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="hs-num">۴</div>
+            <div class="hs-content">
+              <div class="hs-step-title">روی «ذخیره» کلیک کنید</div>
+              <div class="hs-step-desc">دکمه سبز «ذخیره» در انتهای ردیف. تغییرات بلافاصله در سایت اعمال می‌شود.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">رنگ‌های قیمت چه معنایی دارند؟</div>
+          <div class="hc-text">
+            • فیلد <strong>قیمت عادی</strong> — کادر خاکستری معمولی<br>
+            • فیلد <strong>قیمت حراج</strong> — کادر با حاشیه قرمز کمرنگ (برای تمایز)
+          </div>
+        </div>
+
+        <div class="help-tip tip-success">
+          <span class="tip-icon">✓</span>
+          <div class="tip-body">هر تغییر ذخیره شده، <strong>خودکار در لاگ ویرایش</strong> داشبورد ثبت می‌شود با جزئیات قبل و بعد.</div>
+        </div>
+        <div class="help-tip tip-warn">
+          <span class="tip-icon">⚠</span>
+          <div class="tip-body">دکمه 🔗 (مشاهده در سایت) صفحه محصول را در تب جدید باز می‌کند — مفید برای تأیید تغییرات.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- تغییر گروهی -->
+    <div class="hp-tab-content" data-panel="bulk">
+      <div class="help-section">
+        <div class="help-section-header">
+          <div class="hs-icon hs-icon-gold">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <div class="hs-title">تغییر قیمت گروهی</div>
+            <div class="hs-desc">درصد افزایش یا کاهش روی یک دسته</div>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">چطور کار می‌کند؟</div>
+          <div class="hc-text">
+            یک دسته‌بندی انتخاب می‌کنید، نوع تغییر (افزایش/کاهش) و درصد را می‌نویسید — سیستم به صورت خودکار <strong>تمام محصولات آن دسته</strong> را پیدا و قیمت‌شان را تغییر می‌دهد.
+          </div>
+        </div>
+
+        <div class="help-steps">
+          <div class="help-step">
+            <div class="hs-num">۱</div>
+            <div class="hs-content">
+              <div class="hs-step-title">دسته‌بندی هدف را انتخاب کنید</div>
+              <div class="hs-step-desc">از منوی «دسته‌بندی هدف»، دسته‌ای که می‌خواهید قیمتش تغییر کند را انتخاب کنید.</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="hs-num">۲</div>
+            <div class="hs-content">
+              <div class="hs-step-title">نوع تغییر را بگویید</div>
+              <div class="hs-step-desc">«افزایش قیمت (+)» برای گران‌تر کردن، «کاهش قیمت (-)» برای تخفیف دادن.</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="hs-num">۳</div>
+            <div class="hs-content">
+              <div class="hs-step-title">درصد را وارد کنید</div>
+              <div class="hs-step-desc">عدد بین ۱ تا ۱۰۰. مثال: <code>20</code> یعنی ۲۰ درصد افزایش/کاهش.</div>
+            </div>
+          </div>
+          <div class="help-step">
+            <div class="hs-num">۴</div>
+            <div class="hs-content">
+              <div class="hs-step-title">«اعمال تغییرات» را بزنید</div>
+              <div class="hs-step-desc">صبر کنید — ممکن است چند ثانیه طول بکشد. بعد از اتمام، پیام موفقیت نشان داده می‌شود.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-card">
+          <div class="hc-label">📐 مثال عملی</div>
+          <div class="hc-text">
+            می‌خواهید قیمت تمام محصولات دسته «لوازم یخچال» را ۱۵ درصد افزایش دهید:
+            <br><br>
+            دسته: <code>لوازم یخچال</code><br>
+            نوع: <code>افزایش قیمت (+)</code><br>
+            درصد: <code>15</code>
+            <br><br>
+            محصولی که ۵۰۰,۰۰۰ تومان بود → <strong>۵۷۵,۰۰۰ تومان</strong>
+          </div>
+        </div>
+
+        <div class="help-tip tip-danger">
+          <span class="tip-icon">🔴</span>
+          <div class="tip-body"><strong>توجه!</strong> این عملیات برگشت‌پذیر نیست. قبل از اعمال، مطمئن شوید دسته‌بندی درست انتخاب شده.</div>
+        </div>
+        <div class="help-tip tip-info">
+          <span class="tip-icon">💡</span>
+          <div class="tip-body">محصولاتی که <strong>قیمت صفر</strong> دارند نادیده گرفته می‌شوند و قیمتشان تغییر نمی‌کند.</div>
+        </div>
+        <div class="help-tip tip-success">
+          <span class="tip-icon">✓</span>
+          <div class="tip-body">تمام تغییرات گروهی در <strong>لاگ ویرایش</strong> داشبورد با ذکر دسته، درصد و تعداد محصولات ثبت می‌شود.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     محتوای اصلی صفحه با tooltip
+══════════════════════════════════════════════ -->
+
+<div class="panel-wrap">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <p class="page-title">مدیریت محصولات</p>
+        <span class="help-tooltip-wrap">
+          <button class="help-tooltip-btn">?</button>
+          <div class="help-tooltip-box">
+            <div class="tt-title">مدیریت محصولات</div>
+            مستقیم به ووکامرس وصل است. قیمت، حراج و موجودی هر محصول را ویرایش کنید یا قیمت‌های یک دسته را گروهی تغییر دهید.
+          </div>
+        </span>
+      </div>
+      <p class="page-subtitle">ووکامرس — یکپارچه</p>
+    </div>
+    <span class="tag tag-green">
+      <span class="dot"></span>همگام‌سازی فعال
+    </span>
+  </div>
+
+  <!-- Bulk update با tooltip -->
+  <div class="card">
+    <div class="card-header">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gold)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span class="tag tag-gold">تغییر قیمت گروهی</span>
+      <span class="help-tooltip-wrap" style="margin-right:auto">
+        <button class="help-tooltip-btn">?</button>
+        <div class="help-tooltip-box" style="right:auto;left:0;transform:none">
+          <div class="tt-title">تغییر گروهی چیست؟</div>
+          تمام محصولات یک دسته را با یک درصد افزایش یا کاهش می‌دهد. مثال: ۲۰٪ افزایش روی دسته «قطعات یخچال».
+        </div>
+      </span>
+    </div>
+    <div class="card-body">
+      <form method="post" id="bulkUpdateForm">
+        {% csrf_token %}
+        <input type="hidden" name="bulk_update" value="1">
+
+        <div class="row r2" style="margin-bottom:12px">
+          <div>
+            <label for="bulk_category" style="display:flex;align-items:center;gap:4px">
+              دسته‌بندی هدف
+              <span class="help-tooltip-wrap">
+                <button type="button" class="help-tooltip-btn">?</button>
+                <div class="help-tooltip-box">
+                  <div class="tt-title">دسته‌بندی هدف</div>
+                  تمام محصولات این دسته قیمت‌شان تغییر می‌کند. با دقت انتخاب کنید.
+                </div>
+              </span>
+            </label>
+            <select name="bulk_category" id="bulk_category" required>
+              <option value="">— انتخاب دسته —</option>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="bulk_action" style="display:flex;align-items:center;gap:4px">
+              نوع تغییر
+              <span class="help-tooltip-wrap">
+                <button type="button" class="help-tooltip-btn">?</button>
+                <div class="help-tooltip-box">
+                  <div class="tt-title">افزایش یا کاهش</div>
+                  <strong>افزایش:</strong> قیمت × (۱ + درصد/۱۰۰)<br>
+                  <strong>کاهش:</strong> قیمت × (۱ - درصد/۱۰۰)
+                </div>
+              </span>
+            </label>
+            <select name="action" id="bulk_action" required>
+              <option value="increase">افزایش قیمت (+)</option>
+              <option value="decrease">کاهش قیمت (−)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row r2">
+          <div>
+            <label for="bulk_percent" style="display:flex;align-items:center;gap:4px">
+              درصد تغییر
+              <span class="help-tooltip-wrap">
+                <button type="button" class="help-tooltip-btn">?</button>
+                <div class="help-tooltip-box">
+                  <div class="tt-title">درصد تغییر</div>
+                  عدد بین ۱ تا ۱۰۰ وارد کنید. مثال: ۱۵ = پانزده درصد.
+                </div>
+              </span>
+            </label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" name="percent" id="bulk_percent" min="1" max="100" placeholder="مثلاً ۲۰" required>
+              <span style="color:var(--text3);font-size:15px;flex-shrink:0;font-weight:300">%</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button type="submit" class="btn btn-gold btn-block" id="bulkSubmitBtn">
+              <span id="bulkSpinner" class="spinner spinner-dark"></span>
+              <span id="bulkText">اعمال تغییرات</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Search / filter با tooltip -->
+  <div class="card">
+    <div class="card-body">
+      <form method="get">
+        <div class="row r2" style="margin-bottom:12px">
+          <div>
+            <label>جستجو در نام محصول</label>
+            <input type="text" name="search" placeholder="نام محصول..." value="{{ search_q }}">
+          </div>
+          <div>
+            <label>کد SKU</label>
+            <input type="text" name="sku" placeholder="SKU محصول..." value="{{ sku_q }}">
+          </div>
+        </div>
+        <div class="row r3">
+          <div>
+            <label>دسته‌بندی</label>
+            <select name="category">
+              <option value="">همه دسته‌ها</option>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if cat_q == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label>وضعیت موجودی</label>
+            <select name="stock_status">
+              <option value="">همه</option>
+              <option value="instock"    {% if stock_q == 'instock'    %}selected{% endif %}>موجود</option>
+              <option value="outofstock" {% if stock_q == 'outofstock' %}selected{% endif %}>ناموجود</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button type="submit" class="btn btn-primary btn-block">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              فیلتر و جستجو
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- جدول محصولات -->
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px"></th>
+            <th>نام محصول</th>
+            <th style="min-width:108px">
+              قیمت عادی (ت)
+              <span class="help-tooltip-wrap" style="vertical-align:middle;margin-right:4px">
+                <button type="button" class="help-tooltip-btn" style="width:14px;height:14px;font-size:9px">?</button>
+                <div class="help-tooltip-box" style="bottom:calc(100% + 8px)">
+                  <div class="tt-title">قیمت عادی</div>
+                  قیمت اصلی بدون تخفیف. به تومان وارد کنید.
+                </div>
+              </span>
+            </th>
+            <th style="min-width:108px">
+              قیمت حراج (ت)
+              <span class="help-tooltip-wrap" style="vertical-align:middle;margin-right:4px">
+                <button type="button" class="help-tooltip-btn" style="width:14px;height:14px;font-size:9px">?</button>
+                <div class="help-tooltip-box" style="bottom:calc(100% + 8px)">
+                  <div class="tt-title">قیمت حراج</div>
+                  اگر تخفیف دارید، قیمت تخفیف‌خورده را اینجا بنویسید. خالی بگذارید تا حراجی حذف شود.
+                </div>
+              </span>
+            </th>
+            <th style="min-width:110px">موجودی</th>
+            <th style="width:100px;text-align:center">عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>
+              <form method="post" id="row_form_{{ product.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="single_update" value="1">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+              </form>
+              {% if product.images %}
+                <img class="product-img" src="{{ product.images.0.src }}" alt="">
+              {% else %}
+                <div class="product-img-ph">بدون عکس</div>
+              {% endif %}
+            </td>
+            <td>
+              <span class="product-name">{{ product.name|truncatechars:44 }}</span>
+              <span class="product-sku">SKU: {{ product.sku|default:"—" }}</span>
+            </td>
+            <td>
+              <input type="number" form="row_form_{{ product.id }}" name="regular_price"
+                     class="price-inp" value="{{ product.regular_price }}" placeholder="—">
+            </td>
+            <td>
+              <input type="number" form="row_form_{{ product.id }}" name="sale_price"
+                     class="price-inp sale-inp" value="{{ product.sale_price }}" placeholder="—">
+            </td>
+            <td>
+              {% if product.stock_status == 'instock' %}
+                <span class="stock-badge badge-instock"><span class="dot"></span>موجود</span>
+              {% elif product.stock_status == 'outofstock' %}
+                <span class="stock-badge badge-outofstock"><span class="dot"></span>ناموجود</span>
+              {% else %}
+                <span class="stock-badge badge-onbackorder"><span class="dot"></span>پیش‌سفارش</span>
+              {% endif %}
+              <select form="row_form_{{ product.id }}" name="stock_status" class="stock-select">
+                <option value="instock"     {% if product.stock_status == 'instock'     %}selected{% endif %}>موجود</option>
+                <option value="outofstock"  {% if product.stock_status == 'outofstock'  %}selected{% endif %}>ناموجود</option>
+                <option value="onbackorder" {% if product.stock_status == 'onbackorder' %}selected{% endif %}>پیش‌سفارش</option>
+              </select>
+            </td>
+            <td style="text-align:center">
+              <div style="display:flex;gap:5px;justify-content:center">
+                <a href="{{ product.permalink }}" target="_blank" class="btn btn-sm btn-ghost" title="مشاهده در سایت">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+                <button type="submit" form="row_form_{{ product.id }}" class="btn btn-sm btn-success">ذخیره</button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-state-icon">🔍</div>
+                هیچ محصولی با این مشخصات یافت نشد.
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="card-footer">
+      <div class="pagination">
+        {% for i in page_range %}
+          <a class="page-btn {% if current_page == i %}active{% endif %}"
+             href="?page={{ i }}&search={{ search_q }}&category={{ cat_q }}&stock_status={{ stock_q }}&sku={{ sku_q }}">
+            {{ i }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+
+  /* ─── spinner گروهی ─── */
+  document.getElementById('bulkUpdateForm').addEventListener('submit', function () {
+    var btn  = document.getElementById('bulkSubmitBtn');
+    var txt  = document.getElementById('bulkText');
+    var spin = document.getElementById('bulkSpinner');
+    btn.classList.add('btn-disabled');
+    txt.textContent = 'در حال ارتباط با ووکامرس...';
+    spin.style.display = 'inline-block';
+  });
+
+  /* ─── Tooltip هوشمند ─── */
+  (function() {
+    var activeBox = null;
+    function positionTooltip(btn, box) {
+      var r = btn.getBoundingClientRect();
+      var bw = Math.min(270, window.innerWidth * 0.85);
+      var estimatedH = 120;
+      var top = r.top - estimatedH - 10;
+      var left = r.left + r.width / 2 - bw / 2;
+      if (left < 8) left = 8;
+      if (left + bw > window.innerWidth - 8) left = window.innerWidth - bw - 8;
+      if (top < 8) top = r.bottom + 10;
+      box.style.top  = top + 'px';
+      box.style.left = left + 'px';
+      box.style.width = bw + 'px';
+    }
+    document.querySelectorAll('.help-tooltip-wrap').forEach(function(wrap) {
+      var btn = wrap.querySelector('.help-tooltip-btn');
+      var box = wrap.querySelector('.help-tooltip-box');
+      if (!btn || !box) return;
+      function show() {
+        if (activeBox && activeBox !== box) { activeBox.classList.remove('tt-visible'); }
+        positionTooltip(btn, box);
+        box.classList.add('tt-visible');
+        activeBox = box;
+      }
+      function hide() { box.classList.remove('tt-visible'); if (activeBox === box) activeBox = null; }
+      btn.addEventListener('mouseenter', show);
+      btn.addEventListener('mouseleave', hide);
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (box.classList.contains('tt-visible')) { hide(); } else { show(); }
+      });
+    });
+    document.addEventListener('click', function() { if (activeBox) { activeBox.classList.remove('tt-visible'); activeBox = null; } });
+    document.addEventListener('scroll', function() { if (activeBox) { activeBox.classList.remove('tt-visible'); activeBox = null; } }, true);
+  })();
+
+  /* ─── پنل راهنما ─── */
+  var fab      = document.getElementById('helpFab');
+  var overlay  = document.getElementById('helpOverlay');
+  var panel    = document.getElementById('helpPanel');
+  var closeBtn = document.getElementById('helpClose');
+
+  function openHelp() {
+    overlay.classList.add('open');
+    panel.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    var pulse = fab.querySelector('.fab-pulse');
+    if (pulse) { setTimeout(function(){ pulse.style.display='none'; }, 600); }
+  }
+  function closeHelp() {
+    overlay.classList.remove('open');
+    panel.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  fab.addEventListener('click', openHelp);
+  overlay.addEventListener('click', closeHelp);
+  closeBtn.addEventListener('click', closeHelp);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeHelp(); });
+
+  /* ─── تب‌های راهنما ─── */
+  document.querySelectorAll('.hp-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var target = this.dataset.tab;
+      document.querySelectorAll('.hp-tab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.hp-tab-content').forEach(function(c){ c.classList.remove('active'); });
+      this.classList.add('active');
+      var pane = document.querySelector('[data-panel="' + target + '"]');
+      if (pane) pane.classList.add('active');
+    });
+  });
+
+})();
+</script>
+{% endblock %}
