@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .pricing-container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  
+  .pricing-intro { text-align: center; margin-bottom: 40px; }
+  .pricing-intro h1 { font-size: 24px; color: var(--text); margin-bottom: 12px; font-weight: 850; letter-spacing: -1px; }
+  .pricing-intro p { color: var(--text2); font-size: 14px; max-width: 600px; margin: 0 auto; line-height: 1.8; }
+
+  /* بخش معرفی قابلیت‌ها همراه با قیمت مستقیم */
+  .feature-explainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .explainer-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .explainer-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: var(--shadow); }
+  
+  .card-badge { position: absolute; top: 15px; left: -30px; transform: rotate(-45deg); background: var(--accent); color: #fff; font-size: 10px; padding: 4px 35px; font-weight: 700; }
+
+  .explainer-card h3 { display: flex; align-items: center; gap: 10px; font-size: 17px; color: var(--text); margin-bottom: 16px; font-weight: 700; }
+  .explainer-card p { font-size: 13px; color: var(--text2); line-height: 1.8; margin-bottom: 18px; }
+  
+  .feature-list { margin: 0 0 22px 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .feature-list li { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .feature-list li::before { content: ""; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+
+  .card-pricing-footer {
+    margin-top: auto;
+    padding-top: 18px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer-label { font-size: 12px; color: var(--text3); font-weight: 500; }
+  .footer-price { font-size: 18px; font-weight: 800; color: var(--accent); }
+  .footer-price span { font-size: 11px; color: var(--text3); font-weight: 400; margin-right: 4px; }
+
+  /* گرید پکیج‌ها */
+  .packages-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+  .pkg-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 30px 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    transition: all var(--transition);
+    position: relative;
+  }
+  .pkg-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+  .pkg-card.featured { border: 2.5px solid var(--gold); transform: scale(1.03); z-index: 2; background: var(--bg2); }
+  
+  .featured-badge {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #fff; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .pkg-name { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .pkg-limit { font-size: 13px; color: var(--accent); background: var(--accent-bg); padding: 5px 10px; border-radius: 10px; display: inline-block; margin-bottom: 20px; font-weight: 700; }
+  
+  .price-strike { font-size: 13px; color: var(--text4); text-decoration: line-through; margin-bottom: 4px; display: block; }
+  .price-final { font-size: 26px; font-weight: 900; color: var(--text); margin-bottom: 4px; letter-spacing: -1px; }
+  .unit-cost { font-size: 11px; color: var(--success); font-weight: 700; margin-bottom: 22px; display: block; background: var(--success-bg); padding: 3px; border-radius: 4px; }
+  
+  .pkg-includes {
+    margin-bottom: 24px;
+    padding: 13px;
+    background: var(--bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .pkg-includes strong {
+    display: block;
+    font-size: 12px;
+    color: var(--text);
+    font-weight: 800;
+    line-height: 1.8;
+    margin-bottom: 5px;
+  }
+  .pkg-includes span { display: block; font-size: 11px; color: var(--text3); }
+
+  .pkg-btn { margin-top: auto; font-weight: 700; }
+
+  /* Responsive */
+  @media (max-width: 1000px) {
+    .packages-grid { grid-template-columns: 1fr 1fr; }
+    .pkg-card.featured { transform: none; }
+  }
+  @media (max-width: 680px) {
+    .pricing-container { padding: 12px; }
+    .feature-explainer { grid-template-columns: 1fr; }
+    .feature-list { grid-template-columns: 1fr; }
+    .packages-grid { grid-template-columns: 1fr; gap: 12px; }
+    .pkg-card.featured { transform: none; }
+    .pricing-intro h1 { font-size: 20px; }
+  }
+</style>
+
+<div class="pricing-container">
+  
+  <div class="pricing-intro">
+    <h1>انتخاب پلن هوشمند</h1>
+    <p>تعرفه‌های شفاف برای مدیریت حرفه‌ای و ارتقای خودکار محصولات فروشگاه شما</p>
+  </div>
+
+  <div class="feature-explainer">
+    <div class="explainer-card">
+      <div class="card-badge">پایه</div>
+      <h3>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        ۱. مدیریت محصولات
+      </h3>
+      <p>کنترل کامل بر تمام جنبه‌های محصولات موجود. ایده آل برای تغییرات سریع و دسته جمعی در فروشگاه:</p>
+      <ul class="feature-list">
+        <li>تغییر قیمت تکی و گروهی</li>
+        <li>بروزرسانی آنی موجودی</li>
+        <li>فیلتر هوشمند دسته‌بندی</li>
+        <li>ویرایش سریع مشخصات</li>
+      </ul>
+      <div class="card-pricing-footer">
+        <div class="footer-label">هزینه اشتراک ماهانه:</div>
+        <div class="footer-price">۲,۰۰۰,۰۰۰ <span>تومان</span></div>
+      </div>
+    </div>
+
+    <div class="explainer-card">
+      <h3>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gold)"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        ۲. افزودن هوشمند محصول
+      </h3>
+      <p>تولید محتوا با هوش مصنوعی. فقط نام محصول را وارد کنید و خروجی حرفه‌ای و سئو شده تحویل بگیرید:</p>
+      <ul class="feature-list">
+        <li>محتوای سئو شده اختصاصی</li>
+        <li>لینک‌سازی داخلی هوشمند</li>
+        <li>بهینه‌سازی و آپلود عکس</li>
+        <li>تغییر سایز اتوماتیک تصاویر</li>
+      </ul>
+      <div class="card-pricing-footer">
+        <div class="footer-label">هزینه هر بارگذاری (آزاد):</div>
+        <div class="footer-price">۳۸۰,۰۰۰ <span>تومان</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider" style="margin-bottom: 45px; position: relative; border-bottom: 2px solid var(--border);">
+    <span style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--bg); padding: 0 25px; font-size: 13px; color: var(--text2); font-weight: 700; letter-spacing: 1px;">بسته‌های پیشنهادی با تخفیف ویژه</span>
+  </div>
+
+  <div class="packages-grid">
+    
+    <div class="pkg-card">
+      <div class="pkg-name">استارتر</div>
+      <div class="pkg-limit">۵ افزودن هوشمند</div>
+      
+      <div class="pkg-includes">
+        <strong>شامل اشتراک مدیریت محصولات</strong>
+        <strong>+ ۵ سهمیه افزودن هوشمند</strong>
+        <span>(صرفه‌جویی ۱۰۰ هزار تومانی)</span>
+      </div>
+
+      <span class="price-strike">۳,۹۰۰,۰۰۰ تومان</span>
+      <div class="price-final">۳,۸۰۰,۰۰۰</div>
+      <span class="unit-cost">هر محصول ۳۶۰ هزار تومان</span>
+      <button class="btn btn-ghost btn-block pkg-btn">خرید سریع</button>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-name">رشد</div>
+      <div class="pkg-limit">۱۵ افزودن هوشمند</div>
+      
+      <div class="pkg-includes">
+        <strong>شامل اشتراک مدیریت محصولات</strong>
+        <strong>+ ۱۵ سهمیه افزودن هوشمند</strong>
+        <span>(صرفه‌جویی ۴۵۰ هزار تومانی)</span>
+      </div>
+
+      <span class="price-strike">۷,۷۰۰,۰۰۰ تومان</span>
+      <div class="price-final">۷,۲۵۰,۰۰۰</div>
+      <span class="unit-cost">هر محصول ۳۵۰ هزار تومان</span>
+      <button class="btn btn-ghost btn-block pkg-btn">خرید سریع</button>
+    </div>
+
+    <div class="pkg-card featured">
+      <div class="featured-badge">بیشترین انتخاب</div>
+      <div class="pkg-name">حرفه‌ای</div>
+      <div class="pkg-limit">۲۵ افزودن هوشمند</div>
+      
+      <div class="pkg-includes">
+        <strong style="color:var(--accent)">شامل اشتراک مدیریت محصولات</strong>
+        <strong style="color:var(--accent)">+ ۲۵ سهمیه افزودن هوشمند</strong>
+        <span>(صرفه‌جویی ۱,۲۵۰,۰۰۰ تومانی)</span>
+      </div>
+
+      <span class="price-strike">۱۱,۵۰۰,۰۰۰ تومان</span>
+      <div class="price-final">۱۰,۲۵۰,۰۰۰</div>
+      <span class="unit-cost">هر محصول ۳۳۰ هزار تومان</span>
+      <button class="btn btn-primary btn-block pkg-btn">خرید سریع</button>
+    </div>
+
+    <div class="pkg-card">
+      <div class="pkg-name">بیزنس</div>
+      <div class="pkg-limit">۵۰ افزودن هوشمند</div>
+      
+      <div class="pkg-includes">
+        <strong>شامل اشتراک مدیریت محصولات</strong>
+        <strong>+ ۵۰ سهمیه افزودن هوشمند</strong>
+        <span>(صرفه‌جویی ۳,۵۰۰,۰۰۰ تومانی)</span>
+      </div>
+
+      <span class="price-strike">۲۱,۰۰۰,۰۰۰ تومان</span>
+      <div class="price-final">۱۷,۵۰۰,۰۰۰</div>
+      <span class="unit-cost">هر محصول ۳۱۰ هزار تومان</span>
+      <button class="btn btn-ghost btn-block pkg-btn">خرید سریع</button>
+    </div>
+
+  </div>
+
+  <div style="text-align: center; margin-top: 40px; color: var(--text3); font-size: 12px;">
+    تمامی قیمت‌ها به تومان می‌باشد. فعال‌سازی پکیج‌ها به صورت آنی پس از پرداخت انجام می‌شود.
+  </div>
+
+</div>
+{% endblock %}
